@@ -1,0 +1,6 @@
+{
+  "title": "Series (Chinese placeholder)",
+  "description": "(Chinese placeholder)",
+  "icon": "Layers3",
+  "pages": ["list-series", "get-series-comment-count"]
+}

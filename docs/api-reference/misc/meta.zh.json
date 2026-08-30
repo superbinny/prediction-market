@@ -1,0 +1,6 @@
+{
+  "title": "Misc (Chinese placeholder)",
+  "description": "(Chinese placeholder)",
+  "icon": "Package",
+  "pages": ["get-live-volume-for-an-event", "get-open-interest", "get-total-markets-a-user-has-traded"]
+}

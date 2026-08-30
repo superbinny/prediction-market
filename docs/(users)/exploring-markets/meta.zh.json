@@ -1,0 +1,14 @@
+{
+  "title": "Trading Basics (Chinese placeholder)",
+  "description": "(Chinese placeholder)",
+  "icon": "Compass",
+  "pages": [
+    "market-overview",
+    "market-terms",
+    "buy-sell-shares",
+    "understanding-prices",
+    "arbitrage",
+    "order-types",
+    "canceling-orders"
+  ]
+}

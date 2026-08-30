@@ -1,0 +1,23 @@
+{
+  "title": "Market Data (Chinese placeholder)",
+  "description": "(Chinese placeholder)",
+  "icon": "CandlestickChart",
+  "pages": [
+    "get-last-trade-price",
+    "get-last-trade-prices-request-body",
+    "get-market-price",
+    "get-market-prices-request-body",
+    "get-midpoint-price",
+    "get-midpoint-prices-request-body",
+    "get-order-book",
+    "get-order-books-request-body",
+    "get-spread",
+    "get-spreads",
+    "get-fee-rate",
+    "get-fee-rate-by-path",
+    "get-builder-fee-rate",
+    "get-neg-risk",
+    "get-neg-risk-by-path",
+    "get-tick-size"
+  ]
+}

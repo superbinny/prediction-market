@@ -1,0 +1,21 @@
+{
+  "title": "用户指南",
+  "description": "了解预测市场基础知识、为您的钱包充值、进行交易和管理账户。",
+  "icon": "BookOpen",
+  "root": true,
+  "pages": [
+    "index",
+    "---入门指南---",
+    "...getting-started",
+    "---交易基础---",
+    "...exploring-markets",
+    "---账户---",
+    "...my-account",
+    "---结算与分润---",
+    "...resolution-settlement",
+    "---费用与限制---",
+    "...fees-limits",
+    "---帮助与支持---",
+    "...help-support"
+  ]
+}

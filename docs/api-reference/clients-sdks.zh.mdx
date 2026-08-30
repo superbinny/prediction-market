@@ -1,0 +1,240 @@
+---
+title: 客户端与 SDK
+description: 选择用于市场数据、交易或存款钱包操作的客户端
+---
+
+import { Tabs, Tab } from 'fumadocs-ui/components/tabs'
+import { DownloadIcon } from 'lucide-react'
+
+当你想要类型化模型、认证助手和订单签名时使用 SDK。当你
+的运行时不受支持或需要更低级别的控制时，直接
+使用 REST 和 WebSocket API。
+
+<Callout type="info" title="下载配置的包" icon={<DownloadIcon className="size-4" />}>
+  打开 <a href="/zh/settings/sdks">设置 → SDK</a> 以下载针对你的运营商环境配置的包。
+</Callout>
+
+## 选择客户端
+
+| 客户端              | 语言                     | 最佳用途                               |
+| ------------------- | ------------------------ | -------------------------------------- |
+| **CLOB**            | TypeScript、Python、Rust | 市场数据、认证、签名、订单、取消和交易 |
+| **Builder Relayer** | TypeScript、Python、Rust | 存款钱包部署和无 gas 链上批处理        |
+| **REST API**        | 任何                     | 原始 JSON 访问和不受支持的运行时       |
+| **WebSocket**       | 任何                     | 订单簿、订单、交易和实时数据更新       |
+
+| 任务                                 | 使用                   |
+| ------------------------------------ | ---------------------- |
+| 发现事件和市场元数据                 | Gamma API              |
+| 读取订单簿、价格、价差和最小变动价位 | CLOB 客户端或 REST     |
+| 创建凭证并提交订单                   | 认证的 CLOB 客户端     |
+| 部署存款钱包或批处理授权             | Builder Relayer 客户端 |
+| 跟踪实时市场变化                     | 市场 WebSocket         |
+| 跟踪私有订单和交易变化               | 用户 WebSocket         |
+
+## CLOB 快速入门
+
+公共方法只需要 CLOB URL。交易还需要签名人、L2 凭证、
+签名类型 `3` 和存款钱包资金方地址。
+
+<Tabs items={['TypeScript', 'Python', 'Rust']}>
+  <Tab>
+    ```ts
+    import { ClobClient, OrderType, Side, SignatureType } from '@kuestcom/clob-client'
+    import { createWalletClient, http } from 'viem'
+    import { privateKeyToAccount } from 'viem/accounts'
+    import { polygonAmoy } from 'viem/chains'
+
+    const host = process.env.CLOB_URL!
+    const chainId = 80002
+    const tokenID = process.env.CLOB_TOKEN_ID!
+    const account = privateKeyToAccount(process.env.PRIVATE_KEY as `0x${string}`)
+    const signer = createWalletClient({
+      account,
+      chain: polygonAmoy,
+      transport: http(process.env.RPC_URL),
+    })
+
+    const bootstrap = new ClobClient(host, chainId, signer)
+    const creds = await bootstrap.createOrDeriveApiKey()
+    const client = new ClobClient(
+      host,
+      chainId,
+      signer,
+      creds,
+      SignatureType.DEPOSIT_WALLET,
+      process.env.DEPOSIT_WALLET!,
+    )
+
+    const tickSize = await client.getTickSize(tokenID)
+    const negRisk = await client.getNegRisk(tokenID)
+    const result = await client.createAndPostOrder(
+      { tokenID, price: 0.42, size: 5, side: Side.BUY },
+      { tickSize, negRisk },
+      OrderType.GTC,
+      false,
+      true,
+    )
+
+    console.log(result)
+    ```
+
+  </Tab>
+
+  <Tab>
+    ```python
+    import os
+
+    from py_clob_client.client import ClobClient
+    from py_clob_client.clob_types import OrderArgs, OrderType, PartialCreateOrderOptions
+    from py_clob_client.order_builder.constants import BUY
+
+    client = ClobClient(
+        os.environ["CLOB_URL"],
+        chain_id=80002,
+        key=os.environ["PRIVATE_KEY"],
+        signature_type=3,
+        funder=os.environ["DEPOSIT_WALLET"],
+    )
+    client.set_api_creds(client.create_or_derive_api_creds())
+
+    token_id = os.environ["CLOB_TOKEN_ID"]
+    order = client.create_order(
+        OrderArgs(token_id=token_id, price=0.42, size=5, side=BUY),
+        options=PartialCreateOrderOptions(
+            tick_size=client.get_tick_size(token_id),
+            neg_risk=client.get_neg_risk(token_id),
+        ),
+    )
+
+    print(client.post_order(order, OrderType.GTC))
+    ```
+
+  </Tab>
+
+  <Tab>
+    ```toml
+    [dependencies]
+    kuest-client-sdk = { version = "2", features = ["clob"] }
+    rust_decimal = "1"
+    rust_decimal_macros = "1"
+    tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+    ```
+
+    ```rust
+    use std::str::FromStr as _;
+
+    use alloy::signers::{local::LocalSigner, Signer as _};
+    use kuest_client_sdk::clob::types::{OrderType, Side, SignatureType};
+    use kuest_client_sdk::clob::{Client, Config};
+    use kuest_client_sdk::types::{Address, U256};
+    use kuest_client_sdk::AMOY;
+    use rust_decimal::Decimal;
+    use rust_decimal_macros::dec;
+
+    #[tokio::main]
+    async fn main() -> kuest_client_sdk::Result<()> {
+        let signer = LocalSigner::from_str(&std::env::var("PRIVATE_KEY")?)?
+            .with_chain_id(Some(AMOY));
+        let funder = Address::from_str(&std::env::var("DEPOSIT_WALLET")?)?;
+        let token_id = U256::from_str(&std::env::var("CLOB_TOKEN_ID")?)?;
+        let clob_url = std::env::var("CLOB_URL")?;
+
+        let client = Client::new(&clob_url, Config::default())?
+            .authentication_builder(&signer)
+            .signature_type(SignatureType::DepositWallet)
+            .funder(funder)
+            .authenticate()
+            .await?;
+
+        let order = client.limit_order()
+            .token_id(token_id)
+            .side(Side::Buy)
+            .price(dec!(0.42))
+            .size(Decimal::new(5, 0))
+            .order_type(OrderType::GTC)
+            .build()
+            .await?;
+
+        let result = client.post_order(client.sign(&signer, order).await?).await?;
+        println!("{result:?}");
+        Ok(())
+    }
+    ```
+
+  </Tab>
+</Tabs>
+
+<Callout type="warning" title="保持签名在服务端">
+  永远不要将私钥、CLOB API 密钥、relayer 凭证或 builder 凭证放在浏览器暴露的代码中。前端
+  应在需要特权签名时调用受保护的服务。
+</Callout>
+
+## Builder Relayer 工作流
+
+使用 relayer 执行不应要求最终用户持有
+网络 gas 令牌的存款钱包操作。
+
+所需配置：
+
+```bash
+RELAYER_URL=<operator_relayer_url>
+KUEST_BUILDER_API_KEY=...
+KUEST_BUILDER_SECRET=...
+KUEST_BUILDER_PASSPHRASE=...
+PRIVATE_KEY=...
+```
+
+典型工作流是：
+
+1. 派生预期的存款钱包地址。
+2. 检查其合约是否已部署。
+3. 在必要时部署它。
+4. 构建调用，例如抵押品授权和 `splitPosition`。
+5. 使用短过期时间签名存款钱包批处理。
+6. 通过 relayer 提交并等待交易收据。
+
+下载的包包含特定环境的 relayer 示例和合约
+地址。使用这些值而不是从另一个部署复制地址。
+
+## 做市商工作流
+
+做市服务通常：
+
+1. 通过 Gamma 发现活跃市场；
+2. 检查 CLOB 代币 ID、最小变动价位、负风险状态和交易状态；
+3. 准备结果代币库存；
+4. 读取订单簿并计算公平价值；
+5. 发布非交叉、仅挂单的买卖阶梯；
+6. 当价格、库存或风险限制变化时取消或替换过期报价。
+
+<Callout type="warning" title="防止过期或交叉报价">
+  确认最佳买入低于最佳卖出，限制库存和名义敞口，并在你的数据 流过期或策略失去连接时取消报价。
+</Callout>
+
+## 认证和更新
+
+- CLOB 交易使用存款钱包订单，签名类型 `3`。
+- CLOB 客户端从钱包签名派生 L2 凭证。
+- Relayer 客户端使用 `KUEST_BUILDER_*` 凭证。
+- 在签名认证请求前应同步服务器时间。
+
+从其目录就地刷新下载的包：
+
+```bash
+./.sdk/update --latest
+```
+
+## 下一步
+
+<Cards>
+  <Card title="认证" href="/zh/docs/api-reference/authentication">
+    理解 L1 钱包签名和 L2 请求凭证。
+  </Card>
+  <Card title="市场 WebSocket" href="/zh/docs/api-reference/wss/market">
+    订阅订单簿、价格变化和交易。
+  </Card>
+  <Card title="提交订单" href="/zh/docs/api-reference/trade/post-a-new-order">
+    审查从 OpenAPI 生成的请求和响应模式。
+  </Card>
+</Cards>

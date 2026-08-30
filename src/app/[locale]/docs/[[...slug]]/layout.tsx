@@ -1,3 +1,4 @@
+import type { Root } from 'fumadocs-core/page-tree'
 import type { Metadata } from 'next'
 import type { ReactNode } from 'react'
 
@@ -69,7 +70,7 @@ export default async function Layout({ params, children }: DocsSlugLayoutProps) 
           },
         ],
       }}
-      tree={source.pageTree}
+      tree={((source.pageTree as Record<string, Root>)[locale] ?? source.pageTree) as Root}
       themeSwitch={{
         mode: 'light-dark-system',
       }}

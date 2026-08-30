@@ -1,0 +1,14 @@
+{
+  "title": "Core (Chinese placeholder)",
+  "description": "(Chinese placeholder)",
+  "icon": "Database",
+  "pages": [
+    "get-closed-positions-for-a-user",
+    "get-current-positions-for-a-user",
+    "get-top-holders-for-markets",
+    "get-total-value-of-a-users-positions",
+    "get-trader-leaderboard-rankings",
+    "get-trades-for-a-user-or-markets",
+    "get-user-activity"
+  ]
+}

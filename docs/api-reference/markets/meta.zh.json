@@ -1,0 +1,23 @@
+{
+  "title": "Markets (Chinese placeholder)",
+  "description": "(Chinese placeholder)",
+  "icon": "ChartNoAxesCombined",
+  "pages": [
+    "---Gamma API---",
+    "gamma-list-markets",
+    "gamma-get-market-by-id",
+    "gamma-get-market-by-slug",
+    "gamma-get-market-description",
+    "gamma-get-market-tags",
+    "---CLOB API---",
+    "get-clob-market-info",
+    "get-market-by-token-id",
+    "get-market-by-id",
+    "get-prices-history",
+    "get-batch-prices-history",
+    "get-sampling-markets",
+    "get-sampling-simplified-markets",
+    "get-simplified-markets",
+    "list-markets"
+  ]
+}

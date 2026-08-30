@@ -1,0 +1,51 @@
+---
+title: API 概览
+description: 为市场发现、交易、分析或实时数据选择 API 接口
+---
+
+import { SiteName } from '@/app/[locale]/docs/_components/SiteName'
+
+<SiteName /> 平台公开单独的 API，用于公共元数据、CLOB 交易、 投资组合分析和实时更新。根据你需要的数据或操作选择一个，
+而不是将平台视为单一端点。
+
+## API 接口
+
+| API                     | 用途                                         | 基础 URL                                         |
+| ----------------------- | -------------------------------------------- | ------------------------------------------------ |
+| **Gamma**               | 事件、市场、评论、个人资料、标签、系列和搜索 | <PublicRuntimeServiceUrl service="gamma" />      |
+| **CLOB**                | 订单簿、价格、认证、订单、取消和账户交易     | <PublicRuntimeServiceUrl service="clob" />       |
+| **Data**                | 仓位、活动、持有者、排行榜和分析             | <PublicRuntimeServiceUrl service="data" />       |
+| **CLOB WebSocket**      | 公共市场和认证用户流                         | <PublicRuntimeServiceUrl service="wsClob" />     |
+| **Live Data WebSocket** | 活动、评论和实时价格主题                     | <PublicRuntimeServiceUrl service="wsLiveData" /> |
+
+## 认证
+
+公共发现、订单簿、定价和大多数分析端点不需要
+凭证。私有 CLOB 操作使用：
+
+1. **L1 认证** — 一个钱包签名，证明对地址的控制并
+   创建或派生凭证。
+2. **L2 认证** — API 密钥、密钥和密码短语，用于签名私有请求。
+
+订单提交还需要订单本身被签名。
+
+<Callout type="info">
+  如果你的语言受支持，从 SDK 开始。它处理凭证派生、请求签名和类型化负载 同时使用此处记录的相同 API。
+</Callout>
+
+## 从这里开始
+
+<Cards>
+  <Card title="客户端与 SDK" href="/zh/docs/api-reference/clients-sdks">
+    选择 TypeScript、Python、Rust 或直接 API 访问。
+  </Card>
+  <Card title="认证" href="/zh/docs/api-reference/authentication">
+    创建凭证并签名私有 CLOB 请求。
+  </Card>
+  <Card title="列出事件" href="/zh/docs/api-reference/events/list-events">
+    通过 Gamma 兼容目录发现事件。
+  </Card>
+  <Card title="获取订单簿" href="/zh/docs/api-reference/market-data/get-order-book">
+    读取一个结果代币的可执行买单和卖单。
+  </Card>
+</Cards>

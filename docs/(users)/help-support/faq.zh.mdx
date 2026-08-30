@@ -1,0 +1,46 @@
+---
+title: 常见问题
+description: 关于订单、收益、费用和账户活动的快速答案
+---
+
+import { Accordions, Accordion } from 'fumadocs-ui/components/accordion'
+
+<Accordions type="single" collapsible>
+  <Accordion title="我支付什么费用？" value="fees">
+    费用因市场而异，取决于执行价格和成交数量。签名前审查
+    订单预览，成交后审查投资组合历史。推荐不改变
+    交易员支付的费用。
+  </Accordion>
+
+<Accordion title="为什么我的市价单在多个价格成交？" value="market-fill">
+  市价单可以消耗多个订单簿档位。其平均执行价格取决于 到达 CLOB 时的可用流动性。
+</Accordion>
+
+<Accordion title="我在哪里取消订单？" value="cancel-orders">
+  打开 <strong>投资组合 → 开放订单</strong>。你可以取消未成交的限价数量或使用 <strong>取消所有</strong>
+  （当操作可用时）。
+</Accordion>
+
+<Accordion title="我何时可以领取收益？" value="claim">
+  在市场达到最终结果后领取。使用投资组合收益卡片或
+  <strong>已解析市场面板中的领取收益</strong>。
+</Accordion>
+
+<Accordion title="市场争议时会发生什么？" value="dispute">
+  结果不确定且仓位不可领取。监控市场时间线通过争议和 最终审查状态。
+</Accordion>
+
+<Accordion title="我如何领取推荐费用？" value="affiliate-claim">
+  打开{' '}
+  <a href="/zh/settings/rewards">
+    <strong>设置 → 奖励</strong>
+  </a>{' '}
+  当余额可用时在推荐奖励卡片中选择 <strong>领取</strong>。
+</Accordion>
+
+    <Accordion title="我如何导出活动？" value="csv">
+    打开 <strong>投资组合 → 历史记录</strong>，应用你需要的过滤器，并选择
+    下载图标。CSV 反映当前过滤视图。
+
+  </Accordion>
+</Accordions>

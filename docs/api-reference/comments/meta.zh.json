@@ -1,0 +1,6 @@
+{
+  "title": "Comments (Chinese placeholder)",
+  "description": "(Chinese placeholder)",
+  "icon": "MessageCircle",
+  "pages": ["list-comments", "get-comment-replies", "get-comments-by-user-address"]
+}

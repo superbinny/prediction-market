@@ -1,0 +1,16 @@
+{
+  "title": "Account (Chinese placeholder)",
+  "description": "(Chinese placeholder)",
+  "icon": "UserCircle",
+  "pages": [
+    "profile-settings",
+    "public-profile",
+    "account",
+    "account-security",
+    "notifications",
+    "trading-preferences",
+    "rewards",
+    "portfolio-open-positions",
+    "transaction-history"
+  ]
+}

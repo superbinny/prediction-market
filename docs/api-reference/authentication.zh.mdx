@@ -1,0 +1,108 @@
+---
+title: 认证
+description: 创建 CLOB 凭证并签名私有请求
+---
+
+CLOB API 使用两个认证级别。L1 证明对钱包的控制；L2 使用
+从该钱包派生的凭证签名交易和账户请求。
+
+## 选择所需级别
+
+| 级别     | 方法                        | 用途                               |
+| -------- | --------------------------- | ---------------------------------- |
+| **公共** | 无需凭证                    | 市场、订单簿、价格、价差和公共分析 |
+| **L1**   | EIP-712 钱包签名            | 创建或派生 API 凭证                |
+| **L2**   | 使用 API 凭证的 HMAC-SHA256 | 私有订单、取消、交易和账户路由     |
+
+<Callout type="info">L2 认证请求。新订单仍然包含在提交前由交易员签名的订单负载。</Callout>
+
+## 推荐：使用 SDK
+
+TypeScript、Python 和 Rust 客户端创建或派生 L2 凭证并附加
+所需标头。参见 [客户端与 SDK](/zh/docs/api-reference/clients-sdks)。
+
+直接实现认证时，首先同步你的时钟与
+[获取服务器时间](/zh/docs/api-reference/data/get-server-time)。
+
+## 创建或派生凭证
+
+使用以下 L1 路由之一：
+
+```bash
+POST {CLOB_URL}/auth/api-key
+GET  {CLOB_URL}/auth/derive-api-key
+```
+
+发送这些标头：
+
+| 标头              | 必需 | 描述                    |
+| ----------------- | ---- | ----------------------- |
+| `KUEST_ADDRESS`   | 是   | Polygon 签名人地址      |
+| `KUEST_SIGNATURE` | 是   | 认证负载的 EIP-712 签名 |
+| `KUEST_TIMESTAMP` | 是   | 当前 Unix 时间戳（秒）  |
+| `KUEST_NONCE`     | 是   | 认证 nonce，通常为 `0`  |
+| `KUEST_REFERRAL`  | 否   | 用于归因的推荐标识符    |
+
+使用 `KUEST_ADDRESS` 中发送的相同地址签名此 EIP-712 结构：
+
+```json
+{
+  "domain": {
+    "name": "ClobAuthDomain",
+    "version": "1",
+    "chainId": 137
+  },
+  "types": {
+    "ClobAuth": [
+      { "name": "address", "type": "address" },
+      { "name": "timestamp", "type": "string" },
+      { "name": "nonce", "type": "uint256" },
+      { "name": "message", "type": "string" }
+    ]
+  },
+  "message": {
+    "address": "<signing_address>",
+    "timestamp": "<unix_timestamp>",
+    "nonce": "<nonce>",
+    "message": "此消息证明我控制给定的钱包"
+  }
+}
+```
+
+响应包含：
+
+```json
+{
+  "apiKey": "550e8400-e29b-41d4-a716-446655440000",
+  "secret": "<generated_secret>",
+  "passphrase": "<generated_passphrase>"
+}
+```
+
+## 签名 L2 请求
+
+私有 CLOB 路由需要所有五个标头：
+
+| 标头               | 值                        |
+| ------------------ | ------------------------- |
+| `KUEST_ADDRESS`    | Polygon 签名人地址        |
+| `KUEST_SIGNATURE`  | 请求的 HMAC 签名          |
+| `KUEST_TIMESTAMP`  | 当前 Unix 时间戳（秒）    |
+| `KUEST_API_KEY`    | API 密钥 UUID             |
+| `KUEST_PASSPHRASE` | 与 API 密钥配对的密码短语 |
+
+HMAC 输入必须与通过网络发送的精确时间戳、方法、路径和负载匹配。
+在计算签名后不要再次序列化负载。
+
+<Callout type="warning" title="将凭证存储为密钥">
+  将私钥、API 密钥和密码短语保存在服务端密钥存储中。不要将它们放在前端捆绑包中、 日志、分析、URL 或支持消息中。
+</Callout>
+
+## 故障排除
+
+| 症状                 | 检查                                           |
+| -------------------- | ---------------------------------------------- |
+| 时间戳或过期签名错误 | 与服务器时间同步并重试                         |
+| 无效 L1 签名         | 确认链 ID、签名人地址、nonce 和精确消息        |
+| 无效 L2 签名         | 确认方法、路径、原始负载、时间戳和 base64 密钥 |
+| 认证成功但订单失败   | 验证订单签名、资金方、余额和授权               |

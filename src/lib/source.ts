@@ -1,3 +1,4 @@
+import type { I18nConfig } from 'fumadocs-core/i18n'
 import type { LucideIcon } from 'lucide-react'
 
 import { loader } from 'fumadocs-core/source'
@@ -8,6 +9,14 @@ import { createElement } from 'react'
 
 function isLucideIcon(value: unknown): value is LucideIcon {
   return typeof value === 'function' || (typeof value === 'object' && value !== null && '$$typeof' in value)
+}
+
+const docsI18nConfig: I18nConfig<'en' | 'zh'> = {
+  languages: ['en', 'zh'] as const,
+  defaultLanguage: 'en',
+  parser: 'dot',
+  fallbackLanguage: 'en',
+  hideLocale: 'never',
 }
 
 export const source = loader({
@@ -26,4 +35,5 @@ export const source = loader({
       }
     }
   },
+  i18n: docsI18nConfig,
 })

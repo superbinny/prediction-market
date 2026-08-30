@@ -21,7 +21,7 @@ import { SecurityReserveBalance } from '@/app/[locale]/docs/_components/Security
 import { SiteName } from '@/app/[locale]/docs/_components/SiteName'
 import { TradingFeeChart } from '@/app/[locale]/docs/_components/TradingFeeChart'
 import { WebSocketPlayground } from '@/app/[locale]/docs/_components/WebSocketPlayground'
-import { getEnglishDocsStaticParams } from '@/lib/docs-static-params'
+import { getDocsStaticParams } from '@/lib/docs-static-params'
 import { withLocalePrefix } from '@/lib/locale-path'
 import { source } from '@/lib/source'
 import { loadRuntimeThemeState } from '@/lib/theme-settings'
@@ -47,7 +47,7 @@ function getMDXComponents(components?: MDXComponents): MDXComponents {
 }
 
 export async function generateStaticParams() {
-  return getEnglishDocsStaticParams()
+  return getDocsStaticParams()
 }
 
 async function generateCachedDocsMetadata({ locale, slug }: { locale: string; slug?: string[] }): Promise<Metadata> {
@@ -57,7 +57,7 @@ async function generateCachedDocsMetadata({ locale, slug }: { locale: string; sl
   const runtimeTheme = await loadRuntimeThemeState()
   const siteDocumentationTitle = `${runtimeTheme.site.name} Documentation`
 
-  const page = source.getPage(slug)
+  const page = source.getPage(slug, locale)
   if (!page) {
     notFound()
   }
@@ -80,7 +80,7 @@ async function renderCachedDocsPage({ locale, slug }: { locale: string; slug?: s
 
   setRequestLocale(locale)
 
-  const page = source.getPage(slug)
+  const page = source.getPage(slug, locale)
   if (!page) {
     redirect('/docs')
   }

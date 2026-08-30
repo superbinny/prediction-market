@@ -1,0 +1,6 @@
+{
+  "title": "Resolution & Settlement (Chinese placeholder)",
+  "description": "(Chinese placeholder)",
+  "icon": "Gavel",
+  "pages": ["market-resolution", "claiming-winnings", "disputes-edge-cases"]
+}
