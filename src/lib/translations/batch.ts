@@ -96,6 +96,7 @@ function formatLocalizedTime(locale: NonDefaultLocale, date: Date) {
     formatter = new Intl.DateTimeFormat(DATE_FORMATTER_LOCALES[locale], {
       hour: 'numeric',
       minute: '2-digit',
+      dayPeriod: 'narrow',
       timeZone: 'UTC',
     })
     dateFormatters.set(formatterKey, formatter)

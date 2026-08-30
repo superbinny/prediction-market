@@ -108,7 +108,7 @@ describe('translation batch safety', () => {
   })
 
   it.each([
-    ['ar', 'Bitcoin صعودًا أم هبوطًا — 28 يوليو، 8:15 ص ET'],
+    ['ar', 'Bitcoin صعودًا أم هبوطًا — 28 يوليو، 8:15 صباحًا ET'],
     ['de', 'Bitcoin rauf oder runter — 28. Juli, 8:15 ET'],
     ['es', 'Bitcoin sube o baja — 28 de julio, 8:15 ET'],
     ['fr', 'Bitcoin en hausse ou en baisse — 28 juillet, 8:15 ET'],
