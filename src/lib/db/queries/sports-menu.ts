@@ -153,10 +153,6 @@ class EmptySportsMenuRowsError extends Error {
   }
 }
 
-function isEmptySportsMenuRowsError(error: unknown) {
-  return error instanceof EmptySportsMenuRowsError
-}
-
 async function fetchSportsMenuRows(): Promise<SportsMenuItemRow[]> {
   return db
     .select({
@@ -389,9 +385,8 @@ async function getCachedLayoutData(vertical: SportsVertical): Promise<QueryResul
   cacheTag(cacheTags.sportsMenu)
   cacheTag(cacheTags.eventsList)
 
-  const [rows, activeCountRows] = await Promise.all([getRequiredSportsMenuRows(), getCachedActiveSportsCountRows()])
-
   return runQuery(async () => {
+    const [rows, activeCountRows] = await Promise.all([getRequiredSportsMenuRows(), getCachedActiveSportsCountRows()])
     const resolver = buildSportsSlugResolver(toMappingEntries(rows))
     const menuEntries = buildSportsSidebarEntries(rows, vertical)
     const countsBySlug = buildSportsMenuCountsBySlug(resolver, activeCountRows, menuEntries)
@@ -410,9 +405,8 @@ async function getCachedCanonicalSlugByAlias(alias: string): Promise<QueryResult
   'use cache'
   cacheTag(cacheTags.sportsMenu)
 
-  const rows = await getRequiredSportsMenuRows()
-
   return runQuery(async () => {
+    const rows = await getRequiredSportsMenuRows()
     const resolver = buildSportsSlugResolver(toMappingEntries(rows))
 
     return buildQueryResult(resolveCanonicalSportsSlugAlias(resolver, alias))
@@ -423,9 +417,8 @@ async function getCachedLandingHref(vertical: SportsVertical): Promise<QueryResu
   'use cache'
   cacheTag(cacheTags.sportsMenu)
 
-  const rows = await getRequiredSportsMenuRows()
-
   return runQuery(async () => {
+    const rows = await getRequiredSportsMenuRows()
     const menuEntries = buildSportsSidebarEntries(rows, vertical)
 
     return buildQueryResult(findDefaultLandingHref(menuEntries))
@@ -436,9 +429,8 @@ async function getCachedFuturesHref(vertical: SportsVertical): Promise<QueryResu
   'use cache'
   cacheTag(cacheTags.sportsMenu)
 
-  const rows = await getRequiredSportsMenuRows()
-
   return runQuery(async () => {
+    const rows = await getRequiredSportsMenuRows()
     const menuEntries = buildSportsSidebarEntries(rows, vertical)
 
     return buildQueryResult(findDefaultFuturesHref(menuEntries))
@@ -454,19 +446,17 @@ async function getFreshMenuEntries(vertical: SportsVertical): Promise<QueryResul
 }
 
 async function getFreshLayoutData(vertical: SportsVertical): Promise<QueryResult<SportsMenuLayoutData>> {
-  return runQuery(async () => {
-    const [rows, activeCountRows] = await Promise.all([fetchSportsMenuRows(), getCachedActiveSportsCountRows()])
-    const resolver = buildSportsSlugResolver(toMappingEntries(rows))
-    const menuEntries = buildSportsSidebarEntries(rows, vertical)
-    const countsBySlug = buildSportsMenuCountsBySlug(resolver, activeCountRows, menuEntries)
+  const [rows, activeCountRows] = await Promise.all([fetchSportsMenuRows(), getCachedActiveSportsCountRows()])
+  const resolver = buildSportsSlugResolver(toMappingEntries(rows))
+  const menuEntries = buildSportsSidebarEntries(rows, vertical)
+  const countsBySlug = buildSportsMenuCountsBySlug(resolver, activeCountRows, menuEntries)
 
-    return buildQueryResult({
-      menuEntries,
-      countsBySlug,
-      canonicalSlugByAliasKey: Object.fromEntries(resolver.canonicalByAliasKey),
-      h1TitleBySlug: Object.fromEntries(resolver.h1TitleBySlug),
-      sectionsBySlug: Object.fromEntries(resolver.sectionsBySlug),
-    })
+  return buildQueryResult({
+    menuEntries,
+    countsBySlug,
+    canonicalSlugByAliasKey: Object.fromEntries(resolver.canonicalByAliasKey),
+    h1TitleBySlug: Object.fromEntries(resolver.h1TitleBySlug),
+    sectionsBySlug: Object.fromEntries(resolver.sectionsBySlug),
   })
 }
 
@@ -500,16 +490,27 @@ async function getFreshFuturesHref(vertical: SportsVertical): Promise<QueryResul
 async function withFreshSportsMenuRowsFallback<T>(
   cachedQuery: () => Promise<QueryResult<T>>,
   freshQuery: () => Promise<QueryResult<T>>,
-) {
+): Promise<QueryResult<T>> {
+  let result: QueryResult<T>
   try {
-    return await cachedQuery()
-  } catch (error) {
-    if (isEmptySportsMenuRowsError(error)) {
-      return freshQuery()
+    result = await cachedQuery()
+  } catch {
+    try {
+      return await freshQuery()
+    } catch {
+      return { data: null as T, error: 'An error occurred while executing the query.' } as QueryResult<T>
     }
-
-    throw error
   }
+
+  if (result.error) {
+    try {
+      return await freshQuery()
+    } catch {
+      return { data: null as T, error: 'An error occurred while executing the query.' } as QueryResult<T>
+    }
+  }
+
+  return result
 }
 
 export const SportsMenuRepository = {

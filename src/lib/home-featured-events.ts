@@ -23,6 +23,7 @@ import { DEFAULT_LOCALE } from '@/i18n/locales'
 import { cacheTags } from '@/lib/cache-tags'
 import { buildCommunityApiUrl } from '@/lib/community-url'
 import { OUTCOME_INDEX } from '@/lib/constants'
+import { hasDatabaseEnv } from '@/lib/db/env'
 import { EventRepository } from '@/lib/db/queries/event'
 import { HomeFeaturedEventsRepository } from '@/lib/db/queries/home-featured-events'
 import { SettingsRepository } from '@/lib/db/queries/settings'
@@ -622,6 +623,10 @@ async function loadHomeFeaturedSettings() {
   'use cache'
   cacheLife(HOME_INITIAL_EVENTS_CACHE_LIFE)
   cacheTag(cacheTags.settings)
+
+  if (!hasDatabaseEnv()) {
+    return { data: undefined, error: null }
+  }
 
   return SettingsRepository.getSettings()
 }
