@@ -337,17 +337,10 @@ export default function SportsSidebarCategoriesManager({
       return
     }
 
-    const isChangingFeatured = changes.featured !== undefined && changes.featured !== currentCategory.featured
     const updatedCategory = {
       ...currentCategory,
       ...changes,
-      position: isChangingFeatured
-        ? changes.featured
-          ? featuredCategories.length
-          : currentCategory.parentId
-            ? currentCategory.position
-            : standardCategories.length
-        : currentCategory.position,
+      position: currentCategory.position,
     }
     const updatedCategories = categories.map((category) =>
       category.clientKey === clientKey ? updatedCategory : category,
