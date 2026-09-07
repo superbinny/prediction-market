@@ -1,6 +1,6 @@
 {
-  "title": "Builders (Chinese placeholder)",
-  "description": "(Chinese placeholder)",
+  "title": "Builder",
+  "description": "获取 Builder 排行榜和每日交易量数据。",
   "icon": "Hammer",
   "pages": ["get-aggregated-builder-leaderboard", "get-daily-builder-volume-time-series"]
 }

@@ -1,6 +1,6 @@
 {
-  "title": "Market Data (Chinese placeholder)",
-  "description": "(Chinese placeholder)",
+  "title": "订单簿与定价",
+  "description": "获取订单簿、价格、价差和最小变动价位。",
   "icon": "CandlestickChart",
   "pages": [
     "get-last-trade-price",

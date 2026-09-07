@@ -1,6 +1,6 @@
 {
-  "title": "Misc (Chinese placeholder)",
-  "description": "(Chinese placeholder)",
+  "title": "杂项",
+  "description": "获取开放兴趣、实时成交量等附加数据。",
   "icon": "Package",
   "pages": ["get-live-volume-for-an-event", "get-open-interest", "get-total-markets-a-user-has-traded"]
 }

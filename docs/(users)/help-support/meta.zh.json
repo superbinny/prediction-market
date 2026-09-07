@@ -1,6 +1,6 @@
 {
-  "title": "Help & Support (Chinese placeholder)",
-  "description": "(Chinese placeholder)",
+  "title": "帮助与支持",
+  "description": "常见问题、平台规则和支持联系方式。",
   "icon": "LifeBuoy",
   "pages": ["faq", "contact-support", "platform-rules"]
 }

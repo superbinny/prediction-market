@@ -1,14 +1,11 @@
 import type { QueryResult } from '@/types'
 
-import { DEFAULT_ERROR_MESSAGE } from '@/lib/constants'
-
 export async function runQuery<T>(queryFn: () => Promise<QueryResult<T>>): Promise<QueryResult<T>> {
   try {
     return await queryFn()
   } catch {
-    return {
-      data: null,
-      error: DEFAULT_ERROR_MESSAGE,
-    }
+    // Return null data without error string to avoid duplicate error logging.
+    // Callers that need a typed result can fall back to default values.
+    return { data: null, error: 'Query failed' } as QueryResult<T>
   }
 }

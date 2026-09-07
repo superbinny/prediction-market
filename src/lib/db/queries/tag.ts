@@ -14,6 +14,7 @@ import {
   resolveCryptoCadenceRouteSlug,
   resolveCryptoCadenceSidebarLabel,
 } from '@/lib/crypto-cadence-event'
+import { hasDatabaseEnv } from '@/lib/db/env'
 import { event_tags, events, tag_translations, tags, v_main_tag_subcategories } from '@/lib/db/schema/events/tables'
 import { runQuery } from '@/lib/db/utils/run-query'
 import { db } from '@/lib/drizzle'
@@ -342,6 +343,10 @@ export const TagRepository = {
   async getMainTags(locale: SupportedLocale = DEFAULT_LOCALE): Promise<MainTagsResult> {
     'use cache'
     cacheTag(cacheTags.mainTags(locale))
+
+    if (!hasDatabaseEnv()) {
+      return { data: null, error: null, globalChilds: [] }
+    }
 
     const { data: mainTagsResult, error } = await runQuery(async () => {
       const result = await db

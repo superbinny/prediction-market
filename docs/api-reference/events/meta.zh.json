@@ -1,6 +1,6 @@
 {
-  "title": "Events (Chinese placeholder)",
-  "description": "(Chinese placeholder)",
+  "title": "事件",
+  "description": "列出事件、获取事件详情和创作者信息。",
   "icon": "CalendarRange",
   "pages": [
     "list-events",

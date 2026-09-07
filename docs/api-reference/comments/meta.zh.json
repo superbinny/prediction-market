@@ -1,6 +1,6 @@
 {
-  "title": "Comments (Chinese placeholder)",
-  "description": "(Chinese placeholder)",
+  "title": "评论",
+  "description": "列出评论、获取评论回复和用户评论。",
   "icon": "MessageCircle",
   "pages": ["list-comments", "get-comment-replies", "get-comments-by-user-address"]
 }

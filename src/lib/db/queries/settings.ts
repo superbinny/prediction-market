@@ -16,32 +16,35 @@ async function getCachedSettings(): Promise<QueryResult<SettingsMap>> {
   cacheLife('default')
   cacheTag(cacheTags.settings)
 
-  return runQuery(async () => {
-    try {
-      const data = await db
-        .select({
-          group: settings.group,
-          key: settings.key,
-          value: settings.value,
-          updated_at: settings.updated_at,
-        })
-        .from(settings)
+  if (!hasDatabaseEnv()) {
+    return { data: null as unknown as SettingsMap, error: null }
+  }
 
-      const settingsByGroup: SettingsMap = {}
+  try {
+    const data = await db
+      .select({
+        group: settings.group,
+        key: settings.key,
+        value: settings.value,
+        updated_at: settings.updated_at,
+      })
+      .from(settings)
 
-      for (const setting of data) {
-        settingsByGroup[setting.group] ??= {}
-        settingsByGroup[setting.group][setting.key] = {
-          value: setting.value,
-          updated_at: setting.updated_at.toISOString(),
-        }
+    const settingsByGroup: SettingsMap = {}
+
+    for (const setting of data) {
+      settingsByGroup[setting.group] ??= {}
+      settingsByGroup[setting.group][setting.key] = {
+        value: setting.value,
+        updated_at: setting.updated_at.toISOString(),
       }
-
-      return { data: settingsByGroup, error: null }
-    } catch {
-      return { data: null, error: 'Failed to fetch settings.' }
     }
-  })
+
+    return { data: settingsByGroup, error: null }
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err)
+    return { data: null, error: message }
+  }
 }
 
 export const SettingsRepository = {

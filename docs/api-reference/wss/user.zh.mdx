@@ -1,0 +1,59 @@
+---
+title: 用户频道
+description: 流式传输认证账户的私有订单和交易更新
+---
+
+使用用户频道跟踪与 L2 凭证关联的账户的订单放置、成交、取消和交易结算。
+
+## 端点
+
+<code>
+  <PublicRuntimeServiceUrl service="wsClob" path="/ws/user" />
+</code>
+
+## 认证和订阅
+
+| 认证字段     | 必需 | 描述                        |
+| ------------ | ---- | --------------------------- |
+| `apikey`     | 是   | 来自 L1 凭证流程的 UUID     |
+| `secret`     | 是   | 与 API 键配对的 Base64 密钥 |
+| `passphrase` | 是   | 与 API 键配对的密码短语     |
+
+`markets` 数组将更新限制到选定的条件 ID。重用私有 CLOB REST 路由使用的相同 L2 凭证。
+
+<Callout type="warning">订阅包含凭证。仅在受保护的运行时中打开，永远不要记录完整载荷。</Callout>
+
+## 消息类型
+
+| 类型    | 生命周期值                                |
+| ------- | ----------------------------------------- |
+| `order` | `PLACEMENT`, `UPDATE`, `CANCELLATION`     |
+| `trade` | `MATCHED`, `MINED`, `CONFIRMED`, `FAILED` |
+
+数值字段为字符串。`owner`、`trade_owner` 和 `order_owner` 规范化为调用者 API 键。
+
+## 安全重连
+
+消息包含 `sequence`、`stream_id` 和 `server_ts_ms`。如果连接断开、流变化或序列丢失：
+
+1. 通过 REST 获取当前开放订单和相关账户状态；
+2. 重建本地状态；
+3. 重新连接并继续处理新消息。
+
+将 WebSocket 消息视为变更通知，而不是订单或交易的唯一可靠记录。
+
+## 尝试它
+
+<PublicRuntimeWebSocketPlayground
+  service="wsClob"
+  path="/ws/user"
+  defaultMessage={`{
+  "type": "user",
+  "markets": ["<condition_id>"],
+  "auth": {
+    "apikey": "<api_key>",
+    "secret": "<api_secret>",
+    "passphrase": "<api_passphrase>"
+  }
+}`}
+/>

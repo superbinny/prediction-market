@@ -1,6 +1,6 @@
 {
-  "title": "Markets (Chinese placeholder)",
-  "description": "(Chinese placeholder)",
+  "title": "市场",
+  "description": "列出市场、获取市场详情和价格历史。",
   "icon": "ChartNoAxesCombined",
   "pages": [
     "---Gamma API---",

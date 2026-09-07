@@ -1,5 +1,4 @@
 import type { Root } from 'fumadocs-core/page-tree'
-import type { Metadata } from 'next'
 import type { ReactNode } from 'react'
 
 import { DocsLayout } from 'fumadocs-ui/layouts/docs'
@@ -16,16 +15,23 @@ interface DocsSlugLayoutProps {
   children: ReactNode
 }
 
-export async function generateMetadata(): Promise<Metadata> {
-  const runtimeTheme = await loadRuntimeThemeState()
-  const site = runtimeTheme.site
-
-  return {
-    title: {
-      template: `%s | ${site.name} Documentation`,
-      default: `${site.name} Documentation`,
-    },
-  }
+const translations: Record<string, Record<string, string>> = {
+  en: {
+    docsTabTitle: 'Documentation',
+    docsTabDesc: 'For Users',
+    apiTabTitle: 'API Reference',
+    apiTabDesc: 'For Developers',
+    mainSiteLink: 'Main site',
+    helpLink: 'Get Help',
+  },
+  zh: {
+    docsTabTitle: '文档',
+    docsTabDesc: '面向用户',
+    apiTabTitle: 'API 参考',
+    apiTabDesc: '面向开发者',
+    mainSiteLink: '主站',
+    helpLink: '获取帮助',
+  },
 }
 
 export default async function Layout({ params, children }: DocsSlugLayoutProps) {
@@ -33,6 +39,7 @@ export default async function Layout({ params, children }: DocsSlugLayoutProps) 
   setRequestLocale(locale)
   const runtimeTheme = await loadRuntimeThemeState()
   const site = runtimeTheme.site
+  const msgs = translations[locale] || translations.en
 
   return (
     <DocsLayout
@@ -48,7 +55,7 @@ export default async function Layout({ params, children }: DocsSlugLayoutProps) 
               imageClassName="object-contain"
               size={24}
             />
-            <span className="font-medium">{`${site.name} Docs`}</span>
+            <span className="font-medium">{`${site.name} ${msgs.docsTabTitle}`}</span>
           </>
         ),
         transparentMode: 'top',
@@ -57,20 +64,20 @@ export default async function Layout({ params, children }: DocsSlugLayoutProps) 
         prefetch: false,
         tabs: [
           {
-            title: 'Documentation',
-            description: 'For Users',
+            title: msgs.docsTabTitle,
+            description: msgs.docsTabDesc,
             url: '/docs',
             icon: <BookOpenIcon className="size-4" />,
           },
           {
-            title: 'API Reference',
-            description: 'For Developers',
+            title: msgs.apiTabTitle,
+            description: msgs.apiTabDesc,
             url: '/docs/api-reference',
             icon: <SquareTerminalIcon className="size-4" />,
           },
         ],
       }}
-      tree={((source.pageTree as Record<string, Root>)[locale] ?? source.pageTree) as Root}
+      tree={source.getPageTree(locale) as Root}
       themeSwitch={{
         mode: 'light-dark-system',
       }}
@@ -79,7 +86,7 @@ export default async function Layout({ params, children }: DocsSlugLayoutProps) 
           type: 'main',
           url: '/',
           external: true,
-          text: 'Main site',
+          text: msgs.mainSiteLink,
           icon: <HomeIcon />,
         },
         ...(site.discordLink
@@ -88,7 +95,7 @@ export default async function Layout({ params, children }: DocsSlugLayoutProps) 
                 type: 'main' as const,
                 url: site.discordLink,
                 external: true,
-                text: 'Get Help',
+                text: msgs.helpLink,
                 icon: <DiscordIcon />,
               },
             ]

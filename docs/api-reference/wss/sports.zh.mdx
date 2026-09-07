@@ -1,0 +1,73 @@
+---
+title: 实时数据频道
+description: 流式传输公共活动、评论和外部价格更新
+---
+
+实时数据频道在一个连接上复用公共主题。仅订阅你的应用使用的主题和事件类型。
+
+## 端点
+
+<code>
+  <PublicRuntimeServiceUrl service="wsLiveData" />
+</code>
+
+## 保持连接活跃
+
+发送任何大小写形式的 `PING`；服务器回复 `PONG`。
+
+## 订阅信封
+
+| 字段            | 描述                                           |
+| --------------- | ---------------------------------------------- |
+| `action`        | `subscribe` 或 `unsubscribe`                   |
+| `subscriptions` | 主题订阅数组                                   |
+| `topic`         | 公共活动、评论、现货价格和 Chainlink TWAP 主题 |
+| `type`          | 主题内的事件，或 `*` 表示每个支持的事件        |
+| `filters`       | 可选的主题特定过滤器对象                       |
+
+`filters` 接受 JSON 对象或 JSON 编码的字符串。使用 `symbol` 表示单个符号，使用 `symbols` 表示数组。
+
+## 常见主题事件
+
+| 主题                        | 类型              | 用途                       |
+| --------------------------- | ----------------- | -------------------------- |
+| `activity`                  | `orders_matched`  | 公共匹配订单活动           |
+| `comments`                  | `comment_created` | 新社区评论                 |
+| `crypto_prices_chainlink`   | `update`          | Chainlink 现货价格更新     |
+| `crypto_prices_twap_thirty` | `update`          | Chainlink 30 秒 TWAP 更新  |
+| `crypto_prices_twap_sixty`  | `update`          | Chainlink 60 秒 TWAP 更新  |
+| `crypto_prices_binance`     | `update`          | Binance 支持的现货价格更新 |
+
+对于 2026 年 8 月 7 日 00:00 UTC 及之后开始的 Polymarket 市场，5 分钟市场使用 30 秒 TWAP 主题，15 分钟和 4 小时市场使用 60 秒 TWAP 主题。
+
+一个连接可以持有多个订阅。活动载荷在已知市场创建钱包时包含 `creator`。
+
+## 活动示例
+
+```json
+{
+  "topic": "activity",
+  "type": "orders_matched",
+  "payload": {
+    "proxyWallet": "0xe25b9180f5687aa85bd94ee309bb72a464320f1b",
+    "creator": "0x8f2a6db31d2f3f3c8e4f9e74d5f5f9d2a7b0c123",
+    "transactionHash": "0xdeadbeef",
+    "eventSlug": "x-banned-in-uk-by-march-31"
+  }
+}
+```
+
+## 尝试它
+
+<PublicRuntimeWebSocketPlayground
+  service="wsLiveData"
+  defaultMessage={`{
+  "action": "subscribe",
+  "subscriptions": [
+    {
+      "topic": "activity",
+      "type": "orders_matched"
+    }
+  ]
+}`}
+/>

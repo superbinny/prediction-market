@@ -417,6 +417,10 @@ export async function listHomeFeaturedHotTopics(
   cacheLife(HOME_INITIAL_EVENTS_CACHE_LIFE)
   cacheTag(cacheTags.events('guest'), cacheTags.eventsList)
 
+  if (!hasDatabaseEnv()) {
+    return []
+  }
+
   const volume24h = sql<number>`COALESCE(SUM(${markets.volume_24h}), 0)::double precision`
   const fallbackVolume = sql<number>`
     COALESCE(
@@ -554,7 +558,9 @@ export async function listHomeFeaturedHotTopics(
   })
 
   if (error || !data) {
-    console.error('Failed to load home featured hot topics', error)
+    if (error) {
+      console.warn('[HomeFeatured] Hot topics unavailable:', error)
+    }
     return []
   }
 
@@ -854,7 +860,7 @@ export async function listHomeFeaturedEvents(
 ): Promise<HomeFeaturedEventCard[]> {
   const { data: allSettings, error: settingsError } = await loadHomeFeaturedSettings()
   if (settingsError) {
-    console.error('Failed to load home featured settings', settingsError)
+    console.warn('[HomeFeatured] Settings unavailable:', settingsError)
     return []
   }
 

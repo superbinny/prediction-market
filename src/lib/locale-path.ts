@@ -50,7 +50,14 @@ export function stripLocalePrefix(pathname: string) {
 }
 
 export function withLocalePrefix(pathname: string, locale: SupportedLocale) {
-  const normalizedPathname = normalizePathname(pathname)
+  let normalizedPathname = normalizePathname(pathname)
+
+  // Strip existing locale prefix to avoid duplication
+  // e.g. '/zh/docs/...' → '/docs/...' so withLocalePrefix can re-add it
+  const [firstSegment, ...rest] = normalizedPathname.split('/').filter(Boolean)
+  if (isSupportedLocale(firstSegment)) {
+    normalizedPathname = rest.length === 0 ? '/' : `/${rest.join('/')}`
+  }
 
   if (locale === DEFAULT_LOCALE) {
     return normalizedPathname

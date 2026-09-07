@@ -1,6 +1,6 @@
 {
-  "title": "Tags (Chinese placeholder)",
-  "description": "(Chinese placeholder)",
+  "title": "标签",
+  "description": "列出可用的分类标签。",
   "icon": "Tags",
   "pages": ["list-tags"]
 }

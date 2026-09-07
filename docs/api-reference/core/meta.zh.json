@@ -1,6 +1,6 @@
 {
-  "title": "Core (Chinese placeholder)",
-  "description": "(Chinese placeholder)",
+  "title": "核心数据",
+  "description": "获取仓位、持有者、排行榜和交易数据。",
   "icon": "Database",
   "pages": [
     "get-closed-positions-for-a-user",

@@ -1,0 +1,58 @@
+---
+title: 市场频道
+description: 流式传输公共订单簿、价格和交易市场生命周期更新
+---
+
+使用市场频道无需轮询即可保持一个或多个结果代币订单簿的实时更新。该频道为公开频道，不需要 CLOB 凭证。
+
+## 端点
+
+<code>
+  <PublicRuntimeServiceUrl service="wsClob" path="/ws/market" />
+</code>
+
+## 订阅
+
+| 字段                     | 类型     | 描述                                     |
+| ------------------------ | -------- | ---------------------------------------- |
+| `type`                   | string   | 必须为 `market`                          |
+| `assets_ids`             | string[] | 要流式传输的结果代币 ID                  |
+| `custom_feature_enabled` | boolean  | 启用 `best_bid_ask` 和 `new_market` 事件 |
+
+尽可能使用一个连接承载多个代币 ID。
+
+## 消息类型
+
+| 类型               | 含义                               |
+| ------------------ | ---------------------------------- |
+| `book`             | 完整深度 2 订单簿快照              |
+| `price_change`     | 由订单放置或取消引起的增量变化     |
+| `tick_size_change` | 最小价格增量更新                   |
+| `last_trade_price` | 最新匹配成交                       |
+| `best_bid_ask`     | 订单簿顶部更新；需要自定义功能     |
+| `new_market`       | 新摄入的市场元数据；需要自定义功能 |
+
+## 保持本地状态一致
+
+数值以字符串形式序列化。实时消息包含 `sequence`、`stream_id` 和 `server_ts_ms`；`book.hash` 对订单簿载荷进行摘要。
+
+1. 从完整 `book` 快照构建本地状态。
+2. 按顺序应用增量消息。
+3. 在重新连接、流变化或序列间隙时，丢弃本地订单簿并请求新快照。
+
+<Callout type="warning">
+  不要在遗漏序列号后继续应用增量。一个视觉上合理但过时的订单簿会产生不正确的价格和危险的订单。
+</Callout>
+
+## 尝试它
+
+<PublicRuntimeWebSocketPlayground
+  service="wsClob"
+  path="/ws/market"
+  defaultMessage={`{
+  "type": "market",
+  "assets_ids": ["<asset_id>"],
+  "markets": [],
+  "custom_feature_enabled": true
+}`}
+/>

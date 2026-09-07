@@ -1,6 +1,6 @@
 {
-  "title": "Resolution & Settlement (Chinese placeholder)",
-  "description": "(Chinese placeholder)",
+  "title": "结算与分润",
+  "description": "了解市场解析、领取收益和处理争议。",
   "icon": "Gavel",
   "pages": ["market-resolution", "claiming-winnings", "disputes-edge-cases"]
 }

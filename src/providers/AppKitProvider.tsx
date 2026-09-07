@@ -227,150 +227,292 @@ function initializeAppKitSingleton(
   }
 
   try {
-    appKitInstance = createAppKit({
-      projectId: runtimeConfig.projectId,
-      adapters: [wagmiAdapter],
-      themeMode,
-      defaultAccountTypes: { eip155: 'eoa' },
-      metadata: {
-        name: site.name,
-        description: site.description,
-        url: runtimeConfig.siteUrl,
-        icons: [site.logoUrl],
-      },
-      themeVariables: {
-        '--w3m-font-family': 'var(--font-sans)',
-        '--w3m-border-radius-master': '2px',
-        '--w3m-accent': 'var(--primary)',
-      },
-      networks,
-      defaultNetwork,
-      featuredWalletIds: ['c57ca95b47569778a828d19178114f4db188b89b763c899ba0be274e97267d96'],
-      features: {
-        analytics: false,
-        swaps: false,
-        onramp: false,
-        receive: false,
-        send: false,
-        history: false,
-        pay: false,
-        headless: false,
-      },
-      siweConfig: createSIWEConfig({
-        // Multi-wallet arbitrage briefly activates the second wallet before restoring
-        // the authenticated Kuest wallet. Keep the Better Auth session intact.
-        signOutOnAccountChange: false,
-        // Same-wallet arbitrage temporarily switches from the site chain to Polygon.
-        // That network change must not start a second SIWE flow or end the site session.
-        signOutOnNetworkChange: false,
-        getMessageParams: async () => ({
-          domain: new URL(runtimeConfig.siteUrl).host,
-          uri: typeof window !== 'undefined' ? window.location.origin : '',
-          chains: [defaultNetwork.id],
-          statement: 'Please sign with your account',
-        }),
-        createMessage: ({ address, ...args }: SIWECreateMessageArgs) => {
-          const chainId = defaultNetwork.id
-          return createSiweMessage({ ...args, address, chainId }, chainId)
+    // Suppress Reown console warnings when using a dummy project ID
+    const isDummyProjectId = runtimeConfig.projectId === 'dummy-project-id'
+    if (isDummyProjectId) {
+      const originalWarn = console.warn
+      console.warn = () => {}
+      try {
+        appKitInstance = createAppKit({
+          projectId: runtimeConfig.projectId,
+          adapters: [wagmiAdapter],
+          themeMode,
+          defaultAccountTypes: { eip155: 'eoa' },
+          metadata: {
+            name: site.name,
+            description: site.description,
+            url: runtimeConfig.siteUrl,
+            icons: [site.logoUrl],
+          },
+          themeVariables: {
+            '--w3m-font-family': 'var(--font-sans)',
+            '--w3m-border-radius-master': '2px',
+            '--w3m-accent': 'var(--primary)',
+          },
+          networks,
+          defaultNetwork,
+          featuredWalletIds: ['c57ca95b47569778a828d19178114f4db188b89b763c899ba0be274e97267d96'],
+          features: {
+            analytics: false,
+            swaps: false,
+            onramp: false,
+            receive: false,
+            send: false,
+            history: false,
+            pay: false,
+            headless: false,
+          },
+          siweConfig: createSIWEConfig({
+            // Multi-wallet arbitrage briefly activates the second wallet before restoring
+            // the authenticated Kuest wallet. Keep the Better Auth session intact.
+            signOutOnAccountChange: false,
+            // Same-wallet arbitrage temporarily switches from the site chain to Polygon.
+            // That network change must not start a second SIWE flow or end the site session.
+            signOutOnNetworkChange: false,
+            getMessageParams: async () => ({
+              domain: new URL(runtimeConfig.siteUrl).host,
+              uri: typeof window !== 'undefined' ? window.location.origin : '',
+              chains: [defaultNetwork.id],
+              statement: 'Please sign with your account',
+            }),
+            createMessage: ({ address, ...args }: SIWECreateMessageArgs) => {
+              const chainId = defaultNetwork.id
+              return createSiweMessage({ ...args, address, chainId }, chainId)
+            },
+            getNonce: async (address?: string) => {
+              try {
+                if (isPendingSiweAccountAddress(address)) {
+                  return await createPendingSiweNonce()
+                }
+                const { data, error } = await authClient.siwe.nonce()
+                if (!data?.nonce) {
+                  throw new Error(getSiweNonceErrorMessage(error))
+                }
+                return data.nonce
+              } catch (error) {
+                logSiweVerificationFailure('SIWE nonce creation failed', {
+                  address,
+                  chainId: defaultNetwork.id,
+                  error,
+                })
+                throw error
+              }
+            },
+            getSession: async () => {
+              try {
+                const session = await authClient.getSession()
+                if (!session.data?.user) {
+                  return null
+                }
+                const address = getAuthSessionUserAddress(session.data.user)
+                if (!address) {
+                  return null
+                }
+                return { address, chainId: defaultNetwork.id } satisfies SIWESession
+              } catch {
+                return null
+              }
+            },
+            verifyMessage: async ({ message, signature }: SIWEVerifyMessageArgs) => {
+              try {
+                const address = normalizeSiweWalletAddress(getAddressFromMessage(message))
+                await bindPendingSiweNonce({
+                  walletAddress: address,
+                  chainId: defaultNetwork.id,
+                  message,
+                })
+                const { data, error } = await authClient.siwe.verify({ message, signature })
+                if (error) {
+                  return false
+                }
+                return Boolean(data?.success)
+              } catch (error) {
+                logSiweVerificationFailure('SIWE verification failed before Better Auth returned', {
+                  error,
+                })
+                return false
+              }
+            },
+            signOut: async () => {
+              try {
+                const currentUser = useUser.getState()
+                const communityApiUrl = window.__PUBLIC_RUNTIME_CONFIG__?.communityUrl
+                if (currentUser?.address && communityApiUrl) {
+                  await detachTradeAlertsBeforeLogout(communityApiUrl, currentUser.address).catch(() => undefined)
+                }
+                await authClient.signOut()
+                useUser.setState(null)
+                return true
+              } catch {
+                return false
+              }
+            },
+            onSignIn: () => {
+              authClient
+                .getSession()
+                .then((session) => {
+                  const user = session?.data?.user
+                  if (user) {
+                    useUser.setState((previous) => mergeSessionUserState(previous, user as unknown as User))
+                  }
+                })
+                .catch(() => {})
+            },
+            onSignOut: () => {
+              clearAppKitState()
+              window.location.reload()
+            },
+          }),
+        })
+      } finally {
+        console.warn = originalWarn
+      }
+    } else {
+      appKitInstance = createAppKit({
+        projectId: runtimeConfig.projectId,
+        adapters: [wagmiAdapter],
+        themeMode,
+        defaultAccountTypes: { eip155: 'eoa' },
+        metadata: {
+          name: site.name,
+          description: site.description,
+          url: runtimeConfig.siteUrl,
+          icons: [site.logoUrl],
         },
-        getNonce: async (address?: string) => {
-          try {
-            if (isPendingSiweAccountAddress(address)) {
-              return await createPendingSiweNonce()
-            }
-
-            const { data, error } = await authClient.siwe.nonce()
-
-            if (!data?.nonce) {
-              throw new Error(getSiweNonceErrorMessage(error))
-            }
-
-            return data.nonce
-          } catch (error) {
-            logSiweVerificationFailure('SIWE nonce creation failed', {
-              address,
-              chainId: defaultNetwork.id,
-              error,
-            })
-            throw error
-          }
+        themeVariables: {
+          '--w3m-font-family': 'var(--font-sans)',
+          '--w3m-border-radius-master': '2px',
+          '--w3m-accent': 'var(--primary)',
         },
-        getSession: async () => {
-          try {
-            const session = await authClient.getSession()
-            if (!session.data?.user) {
+        networks,
+        defaultNetwork,
+        featuredWalletIds: ['c57ca95b47569778a828d19178114f4db188b89b763c899ba0be274e97267d96'],
+        features: {
+          analytics: false,
+          swaps: false,
+          onramp: false,
+          receive: false,
+          send: false,
+          history: false,
+          pay: false,
+          headless: false,
+        },
+        siweConfig: createSIWEConfig({
+          // Multi-wallet arbitrage briefly activates the second wallet before restoring
+          // the authenticated Kuest wallet. Keep the Better Auth session intact.
+          signOutOnAccountChange: false,
+          // Same-wallet arbitrage temporarily switches from the site chain to Polygon.
+          // That network change must not start a second SIWE flow or end the site session.
+          signOutOnNetworkChange: false,
+          getMessageParams: async () => ({
+            domain: new URL(runtimeConfig.siteUrl).host,
+            uri: typeof window !== 'undefined' ? window.location.origin : '',
+            chains: [defaultNetwork.id],
+            statement: 'Please sign with your account',
+          }),
+          createMessage: ({ address, ...args }: SIWECreateMessageArgs) => {
+            const chainId = defaultNetwork.id
+            return createSiweMessage({ ...args, address, chainId }, chainId)
+          },
+          getNonce: async (address?: string) => {
+            try {
+              if (isPendingSiweAccountAddress(address)) {
+                return await createPendingSiweNonce()
+              }
+
+              const { data, error } = await authClient.siwe.nonce()
+
+              if (!data?.nonce) {
+                throw new Error(getSiweNonceErrorMessage(error))
+              }
+
+              return data.nonce
+            } catch (error) {
+              logSiweVerificationFailure('SIWE nonce creation failed', {
+                address,
+                chainId: defaultNetwork.id,
+                error,
+              })
+              throw error
+            }
+          },
+          getSession: async () => {
+            try {
+              const session = await authClient.getSession()
+              if (!session.data?.user) {
+                return null
+              }
+
+              const address = getAuthSessionUserAddress(session.data.user)
+              if (!address) {
+                return null
+              }
+
+              return {
+                address,
+                chainId: defaultNetwork.id,
+              } satisfies SIWESession
+            } catch {
               return null
             }
+          },
+          verifyMessage: async ({ message, signature }: SIWEVerifyMessageArgs) => {
+            try {
+              const address = normalizeSiweWalletAddress(getAddressFromMessage(message))
+              await bindPendingSiweNonce({
+                walletAddress: address,
+                chainId: defaultNetwork.id,
+                message,
+              })
 
-            const address = getAuthSessionUserAddress(session.data.user)
-            if (!address) {
-              return null
-            }
+              const { data, error } = await authClient.siwe.verify({ message, signature })
 
-            return {
-              address,
-              chainId: defaultNetwork.id,
-            } satisfies SIWESession
-          } catch {
-            return null
-          }
-        },
-        verifyMessage: async ({ message, signature }: SIWEVerifyMessageArgs) => {
-          try {
-            const address = normalizeSiweWalletAddress(getAddressFromMessage(message))
-            await bindPendingSiweNonce({
-              walletAddress: address,
-              chainId: defaultNetwork.id,
-              message,
-            })
+              if (error) {
+                return false
+              }
 
-            const { data, error } = await authClient.siwe.verify({ message, signature })
-
-            if (error) {
+              return Boolean(data?.success)
+            } catch (error) {
+              logSiweVerificationFailure('SIWE verification failed before Better Auth returned', {
+                error,
+              })
               return false
             }
-
-            return Boolean(data?.success)
-          } catch (error) {
-            logSiweVerificationFailure('SIWE verification failed before Better Auth returned', {
-              error,
-            })
-            return false
-          }
-        },
-        signOut: async () => {
-          try {
-            const currentUser = useUser.getState()
-            const communityApiUrl = window.__PUBLIC_RUNTIME_CONFIG__?.communityUrl
-            if (currentUser?.address && communityApiUrl) {
-              await detachTradeAlertsBeforeLogout(communityApiUrl, currentUser.address).catch(() => undefined)
-            }
-            await authClient.signOut()
-            useUser.setState(null)
-            return true
-          } catch {
-            return false
-          }
-        },
-        onSignIn: () => {
-          authClient
-            .getSession()
-            .then((session) => {
-              const user = session?.data?.user
-              if (user) {
-                useUser.setState((previous) => {
-                  return mergeSessionUserState(previous, user as unknown as User)
-                })
+          },
+          signOut: async () => {
+            try {
+              const currentUser = useUser.getState()
+              const communityApiUrl = window.__PUBLIC_RUNTIME_CONFIG__?.communityUrl
+              if (currentUser?.address && communityApiUrl) {
+                await detachTradeAlertsBeforeLogout(communityApiUrl, currentUser.address).catch(() => undefined)
               }
-            })
-            .catch(() => {})
-        },
-        onSignOut: () => {
-          clearAppKitState()
-          window.location.reload()
-        },
-      }),
-    })
+              await authClient.signOut()
+              useUser.setState(null)
+              return true
+            } catch {
+              return false
+            }
+          },
+          onSignIn: () => {
+            authClient
+              .getSession()
+              .then((session) => {
+                const user = session?.data?.user
+                if (user) {
+                  useUser.setState((previous) => {
+                    return mergeSessionUserState(previous, user as unknown as User)
+                  })
+                }
+              })
+              .catch(() => {})
+          },
+          onSignOut: () => {
+            clearAppKitState()
+            window.location.reload()
+          },
+        }),
+      })
+    }
 
     hasInitializedAppKit = true
     notifyAppKitStateChange()

@@ -1,6 +1,6 @@
 {
-  "title": "Fees & Limits (Chinese placeholder)",
-  "description": "(Chinese placeholder)",
+  "title": "费用与限制",
+  "description": "了解交易费用、限额和充值提现方式。",
   "icon": "Coins",
   "pages": ["trading-fees", "trading-limits"]
 }

@@ -1,6 +1,6 @@
 {
-  "title": "Account (Chinese placeholder)",
-  "description": "(Chinese placeholder)",
+  "title": "账户管理",
+  "description": "管理账户安全、个人资料、交易偏好和投资组合活动。",
   "icon": "UserCircle",
   "pages": [
     "profile-settings",

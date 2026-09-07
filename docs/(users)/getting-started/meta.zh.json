@@ -1,6 +1,6 @@
 {
-  "title": "Getting Started (Chinese placeholder)",
-  "description": "(Chinese placeholder)",
+  "title": "入门指南",
+  "description": "创建账户、充值钱包并领取收益。",
   "icon": "CirclePlay",
   "pages": ["how-to-sign-up", "how-to-deposit", "how-to-claim"],
   "defaultOpen": true

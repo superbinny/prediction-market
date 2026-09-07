@@ -154,29 +154,36 @@ class EmptySportsMenuRowsError extends Error {
 }
 
 async function fetchSportsMenuRows(): Promise<SportsMenuItemRow[]> {
-  return db
-    .select({
-      id: sports_menu_items.id,
-      item_type: sports_menu_items.item_type,
-      label: sports_menu_items.label,
-      href: sports_menu_items.href,
-      icon_url: sports_menu_items.icon_url,
-      parent_id: sports_menu_items.parent_id,
-      menu_slug: sports_menu_items.menu_slug,
-      h1_title: sports_menu_items.h1_title,
-      mapped_tags: sports_menu_items.mapped_tags,
-      url_aliases: sports_menu_items.url_aliases,
-      games_enabled: sports_menu_items.games_enabled,
-      props_enabled: sports_menu_items.props_enabled,
-      sort_order: sports_menu_items.sort_order,
-      sidebar_category: sports_menu_items.sidebar_category,
-      sidebar_enabled: sports_menu_items.sidebar_enabled,
-      sidebar_featured: sports_menu_items.sidebar_featured,
-      sidebar_sort_order: sports_menu_items.sidebar_sort_order,
-    })
-    .from(sports_menu_items)
-    .where(eq(sports_menu_items.enabled, true))
-    .orderBy(asc(sports_menu_items.sort_order), asc(sports_menu_items.id))
+  if (!hasDatabaseEnv()) {
+    return []
+  }
+  try {
+    return db
+      .select({
+        id: sports_menu_items.id,
+        item_type: sports_menu_items.item_type,
+        label: sports_menu_items.label,
+        href: sports_menu_items.href,
+        icon_url: sports_menu_items.icon_url,
+        parent_id: sports_menu_items.parent_id,
+        menu_slug: sports_menu_items.menu_slug,
+        h1_title: sports_menu_items.h1_title,
+        mapped_tags: sports_menu_items.mapped_tags,
+        url_aliases: sports_menu_items.url_aliases,
+        games_enabled: sports_menu_items.games_enabled,
+        props_enabled: sports_menu_items.props_enabled,
+        sort_order: sports_menu_items.sort_order,
+        sidebar_category: sports_menu_items.sidebar_category,
+        sidebar_enabled: sports_menu_items.sidebar_enabled,
+        sidebar_featured: sports_menu_items.sidebar_featured,
+        sidebar_sort_order: sports_menu_items.sidebar_sort_order,
+      })
+      .from(sports_menu_items)
+      .where(eq(sports_menu_items.enabled, true))
+      .orderBy(asc(sports_menu_items.sort_order), asc(sports_menu_items.id))
+  } catch {
+    return []
+  }
 }
 
 const getCachedSportsMenuRows = unstable_cache(

@@ -1,6 +1,6 @@
 {
-  "title": "WebSocket (Chinese placeholder)",
-  "description": "(Chinese placeholder)",
+  "title": "WebSocket",
+  "description": "WebSocket 频道，涵盖公共市场、私有账户和实时数据主题。",
   "icon": "Radio",
   "pages": ["market", "user", "sports"]
 }

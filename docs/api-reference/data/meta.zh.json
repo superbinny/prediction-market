@@ -1,6 +1,6 @@
 {
-  "title": "Data (Chinese placeholder)",
-  "description": "(Chinese placeholder)",
+  "title": "数据",
+  "description": "获取服务器时间等基础数据。",
   "icon": "Activity",
   "pages": ["get-server-time"]
 }

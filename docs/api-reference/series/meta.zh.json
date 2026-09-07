@@ -1,6 +1,6 @@
 {
-  "title": "Series (Chinese placeholder)",
-  "description": "(Chinese placeholder)",
+  "title": "系列",
+  "description": "列出系列和获取系列评论计数。",
   "icon": "Layers3",
   "pages": ["list-series", "get-series-comment-count"]
 }

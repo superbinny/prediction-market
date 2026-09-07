@@ -1,6 +1,6 @@
 {
-  "title": "Search (Chinese placeholder)",
-  "description": "(Chinese placeholder)",
+  "title": "搜索",
+  "description": "搜索市场、事件和个人资料。",
   "icon": "Search",
   "pages": ["search-markets-events-and-profiles"]
 }

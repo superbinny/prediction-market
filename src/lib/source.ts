@@ -16,7 +16,7 @@ const docsI18nConfig: I18nConfig<'en' | 'zh'> = {
   defaultLanguage: 'en',
   parser: 'dot',
   fallbackLanguage: 'en',
-  hideLocale: 'never',
+  hideLocale: 'always',
 }
 
 export const source = loader({
