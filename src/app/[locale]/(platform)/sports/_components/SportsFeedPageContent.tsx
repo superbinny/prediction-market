@@ -31,7 +31,6 @@ async function loadSportsFeedPageData({
   pageMode: SportsFeedPageMode
   vertical: SportsVertical
 }) {
-  'use cache'
   cacheTag(cacheTags.eventsList, cacheTags.sportsMenu)
   const locale = await getRootLocale()
 
