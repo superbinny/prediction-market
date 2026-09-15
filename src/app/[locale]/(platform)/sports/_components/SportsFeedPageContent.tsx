@@ -1,11 +1,8 @@
-import { cacheTag } from 'next/cache'
-
 import type { SportsVertical } from '@/lib/sports-vertical'
 
 import SportsGamesCenter from '@/app/[locale]/(platform)/sports/_components/SportsGamesCenter'
 import { buildSportsGamesCards } from '@/app/[locale]/(platform)/sports/_utils/sports-games-data'
 import { getRootLocale } from '@/i18n/root-locale'
-import { cacheTags } from '@/lib/cache-tags'
 import { hasDatabaseEnv } from '@/lib/db/env'
 import { EventRepository } from '@/lib/db/queries/event'
 import { SportsMenuRepository } from '@/lib/db/queries/sports-menu'
@@ -31,7 +28,6 @@ async function loadSportsFeedPageData({
   pageMode: SportsFeedPageMode
   vertical: SportsVertical
 }) {
-  cacheTag(cacheTags.eventsList, cacheTags.sportsMenu)
   const locale = await getRootLocale()
 
   if (!databaseEnvAvailable) {
