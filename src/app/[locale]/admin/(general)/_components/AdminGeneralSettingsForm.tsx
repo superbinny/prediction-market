@@ -131,7 +131,7 @@ function AdminGeneralSettingsFormInner({
   const sideCardImagePreviewUrlsRef = useRef<Record<string, string>>({})
   const submitGeneralSettingsAction = useCallback(
     async (previousState: GeneralSettingsActionState, formData: FormData) => {
-      for (const key of Array.from(formData.keys())) {
+      for (const key of Array.from(formData.keys() ?? [])) {
         if (key.startsWith('home_featured_side_card_image_')) {
           formData.delete(key)
         }

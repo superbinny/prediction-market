@@ -57,7 +57,26 @@ async function generateCachedDocsMetadata({ locale, slug }: { locale: string; sl
   const runtimeTheme = await loadRuntimeThemeState()
   const siteDocumentationTitle = `${runtimeTheme.site.name} Documentation`
 
-  const page = source.getPage(slug, locale)
+  const resolvedSlug = Array.isArray(slug) ? slug : slug === undefined ? [] : [slug]
+  let page = source.getPage(resolvedSlug, locale)
+
+  // For root page, source.getPage might return EN even for zh locale
+  // Use getPages which has correct data. Check both '/docs' and '/docs/index'.
+  if (resolvedSlug.length === 0) {
+    const allPages = source.getPages(locale) as any[]
+    // Try '/docs/index' first (may have translated content), then '/docs' (may have EN content)
+    let rootPage = allPages.find((p: any) => p.url === '/docs/index' && p.locale === locale)
+    if (!rootPage) {
+      rootPage = allPages.find((p: any) => p.url === '/docs' && p.locale === locale)
+    }
+    page = rootPage ?? page
+    console.log(`[META DEBUG] locale=${locale}, foundZhRoot=${Boolean(page)}, title=${(page as any)?.data?.title}`)
+    const rootPageMeta = source.getPages(locale).find((p: any) => p.url === '/docs')
+    console.log(
+      `[META DEBUG] zh root page data: title=${rootPageMeta?.data?.title} desc=${rootPageMeta?.data?.description?.substring(0, 30)} hasBody=${Boolean(rootPageMeta?.data?.body)}`,
+    )
+  }
+
   if (!page) {
     notFound()
   }
@@ -80,19 +99,71 @@ async function renderCachedDocsPage({ locale, slug }: { locale: string; slug?: s
 
   setRequestLocale(locale)
 
-  const page = source.getPage(slug, locale)
-  if (!page) {
-    redirect('/docs')
+  // Fumadocs source.getPage expects an array of slugs (not undefined)
+  const resolvedSlug = Array.isArray(slug) ? slug : slug === undefined ? [] : [slug]
+  console.log(
+    `[PAGE DEBUG] locale=${locale}, originalSlug=${JSON.stringify(slug)}, resolvedSlug=${JSON.stringify(resolvedSlug)}`,
+  )
+
+  // Get all pages for this locale to find the correct one
+  const allPages = source.getPages(locale) as any[]
+  console.log(`[PAGE DEBUG] allPages count for ${locale}:`, allPages.length)
+
+  // Find the zh root page and check its data (try /docs/index first, then /docs)
+  const zhRootPage =
+    allPages.find((p: any) => p.url === '/docs/index' && p.locale === locale) ??
+    allPages.find((p: any) => p.url === '/docs' && p.locale === locale)
+  console.log(
+    `[PAGE DEBUG] zh root page: url=${zhRootPage?.url} title=${zhRootPage?.data?.title} locale=${zhRootPage?.locale} hasBody=${Boolean(zhRootPage?.data?.body)}`,
+  )
+  console.log(
+    `[PAGE DEBUG] zh root page data keys:`,
+    zhRootPage ? Object.keys(zhRootPage.data || {}).join(', ') : 'N/A',
+  )
+
+  // First try source.getPage, then fall back to finding the page from getPages
+  let page = source.getPage(resolvedSlug, locale)
+  if (page && page.url && !resolvedSlug.length) {
+    // Root page: find from getPages which has correct data.
+    // Try '/docs/index' first (may have translated content), then '/docs' (may have EN content)
+    let rootPage = allPages.find((p: any) => p.url === '/docs/index' && p.locale === locale)
+    if (!rootPage) {
+      rootPage = allPages.find((p: any) => p.url === '/docs' && p.locale === locale)
+    }
+    if (rootPage) {
+      page = rootPage
+    }
+  }
+  const effectivePage = page
+  console.log(
+    `[PAGE DEBUG] locale=${locale}, found=${Boolean(effectivePage)}, page.url=${(effectivePage as any)?.url ?? 'N/A'}, title=${(effectivePage as any)?.data?.title ?? 'N/A'}, pageLocale=${(effectivePage as any)?.locale ?? 'N/A'}, description=${(effectivePage as any)?.data?.description ?? 'N/A'}`,
+  )
+  // Debug: find the zh root page in allPages to check data
+  if (locale === 'zh' && resolvedSlug.length === 0) {
+    const zhRoot = allPages.find((p: any) => p.url === '/docs' && p.locale === 'zh')
+    if (zhRoot) {
+      console.log(`[PAGE DEBUG] zh root page:`, {
+        url: zhRoot.url,
+        locale: zhRoot.locale,
+        title: zhRoot.data?.title,
+        description: zhRoot.data?.description,
+        hasBody: Boolean(zhRoot.data?.body),
+        bodyType: typeof zhRoot.data?.body,
+      })
+    }
+  }
+  if (!effectivePage) {
+    redirect(`/${locale}/docs`)
   }
 
-  const localizedPageUrl = withLocalePrefix(page.url, locale as SupportedLocale)
+  const localizedPageUrl = withLocalePrefix(effectivePage.url, locale as SupportedLocale)
   const markdownUrl = `${localizedPageUrl}.md`
-  const MDX = page.data.body
-  const useFullLayout = Boolean(page.data.full)
+  const MDX = effectivePage.data.body
+  const useFullLayout = Boolean(effectivePage.data.full)
 
   return (
     <DocsPage
-      toc={page.data.toc}
+      toc={effectivePage.data.toc}
       full={useFullLayout}
       tableOfContent={{
         style: 'clerk',
@@ -101,8 +172,8 @@ async function renderCachedDocsPage({ locale, slug }: { locale: string; slug?: s
       <div className="border-b pb-4 lg:pb-0">
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
-            <DocsTitle>{page.data.title}</DocsTitle>
-            <DocsDescription>{page.data.description}</DocsDescription>
+            <DocsTitle>{effectivePage.data.title}</DocsTitle>
+            <DocsDescription>{effectivePage.data.description}</DocsDescription>
           </div>
           <div className="hidden shrink-0 items-center gap-2 lg:flex">
             <ViewOptions markdownUrl={markdownUrl} />
