@@ -19,6 +19,11 @@
   LastModify:  2026-09-14（最后一次修改日期）
 -->
 
+---
+
+title: Everything Claude Code (ECC) Complete Manual
+---
+
 # Everything Claude Code (ECC) — Complete Manual
 
 ## Table of Contents

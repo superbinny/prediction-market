@@ -19,6 +19,11 @@
        LastModify:  2026-09-14（最后一次修改日期）
 -->
 
+---
+
+title: Contributing Guide
+---
+
 # Contributing to Kuest
 
 > **Last Updated:** 2026-09-14
